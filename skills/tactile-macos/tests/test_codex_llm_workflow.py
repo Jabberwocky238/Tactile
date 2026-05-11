@@ -121,7 +121,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
         self.assertEqual(results[0]["activated_pid"], 4242)
 
     def test_feishu_direct_ax_failure_does_not_fallback_to_coordinate_click(self):
-        element = workflow.UiElement("e1", "AXButton", "LGAI Lab 团队管理", 70, 859, 26, 26, "app.windows[1].children[0]")
+        element = workflow.UiElement("e1", "AXButton", "示例团队管理", 70, 859, 26, 26, "app.windows[1].children[0]")
         calls: list[list[str]] = []
 
         def fake_run_command(cmd, *, check=True, timeout=None):
@@ -606,7 +606,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
             )
 
             results = workflow.execute_plan(
-                [{"type": "writetext", "element_id": "e0", "text": "石展鹏"}],
+                [{"type": "writetext", "element_id": "e0", "text": "张三"}],
                 {"e0": element},
                 target_identifier="/Applications/Lark.app",
                 target_pid=31334,
@@ -624,8 +624,8 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
         self.assertIn(UTF8_CLIPBOARD_CMD_PREFIX + ["pbpaste"], commands)
         self.assertIn(["/tmp/InputControllerTool", "keypress", "cmd+a"], commands)
         self.assertIn(["/tmp/InputControllerTool", "keypress", "cmd+v"], commands)
-        self.assertNotIn(["/tmp/InputControllerTool", "axsetvalue", "31334", "app.windows[0].children[0]", "石展鹏"], commands)
-        self.assertIn((UTF8_CLIPBOARD_CMD_PREFIX + ["pbcopy"], "石展鹏"), calls)
+        self.assertNotIn(["/tmp/InputControllerTool", "axsetvalue", "31334", "app.windows[0].children[0]", "张三"], commands)
+        self.assertIn((UTF8_CLIPBOARD_CMD_PREFIX + ["pbcopy"], "张三"), calls)
         self.assertIn((UTF8_CLIPBOARD_CMD_PREFIX + ["pbcopy"], "old clipboard"), calls)
         self.assertEqual(results[0]["mode"], "paste")
         self.assertEqual(results[0]["input_method"], "clipboard_paste")
@@ -658,7 +658,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
             )
 
             results = workflow.execute_plan(
-                [{"type": "writetext", "element_id": "e0", "text": "石展鹏"}],
+                [{"type": "writetext", "element_id": "e0", "text": "张三"}],
                 {"e0": element},
                 target_identifier="/Applications/Lark.app",
                 target_pid=31334,
@@ -741,7 +741,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
             )
 
             results = workflow.execute_plan(
-                [{"type": "writetext", "text": "石展鹏"}],
+                [{"type": "writetext", "text": "张三"}],
                 {},
                 target_identifier="/Applications/Lark.app",
                 target_pid=31334,
@@ -762,7 +762,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
         element = workflow.UiElement(
             "e0",
             "AXTextArea",
-            "石展鹏你好，我是 Codex，一个由 OpenAI 训练的 AI 编程助手。",
+            "张三你好，我是 Codex，一个由 OpenAI 训练的 AI 编程助手。",
             338,
             157,
             899,
@@ -783,7 +783,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
                     {
                         "type": "writetext",
                         "element_id": "e0",
-                        "text": "石展鹏你好，我是 Codex，一个由 OpenAI 训练的 AI 编程助手。",
+                        "text": "张三你好，我是 Codex，一个由 OpenAI 训练的 AI 编程助手。",
                     }
                 ],
                 {"e0": element},
@@ -801,7 +801,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
 
     def test_post_input_verification_flags_visible_text_without_search_results(self):
         step_record = {
-            "plan": {"actions": [{"type": "writetext", "text": "石展鹏"}]},
+            "plan": {"actions": [{"type": "writetext", "text": "张三"}]},
             "execution_results": [
                 {
                     "action": {"type": "writetext", "text_length": 3},
@@ -812,7 +812,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
         workflow.verify_previous_text_input(
             step_record,
             [
-                {"text": "石展鹏"},
+                {"text": "张三"},
                 {"text": "通过姓名或邮箱查找联系人"},
             ],
         )
@@ -929,7 +929,7 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
                 "imageHeight": 1600,
                 "lines": [
                     {
-                        "text": "石展鹏",
+                        "text": "张三",
                         "confidence": 0.9,
                         "frame": {"x": 200, "y": 100, "width": 100, "height": 40},
                     }

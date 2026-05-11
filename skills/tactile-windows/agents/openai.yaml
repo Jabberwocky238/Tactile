@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tactile Windows"
+  short_description: "Operate Windows apps with UIA and OCR"
+  default_prompt: "Use $tactile-windows to inspect and operate a local Windows app safely through UI Automation, targeted OCR, bounded one-action workflow steps, and session-scoped artifacts."
