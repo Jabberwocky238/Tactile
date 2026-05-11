@@ -22,7 +22,7 @@
 - For search fields, use focus plus real text input events. The runtime uses clipboard paste so the WebView receives an input event.
 - If typed search text is visible but results remain unchanged, clear the field and paste the query again instead of duplicating text.
 - For contact messaging, prefer entering the organization member directory from `通讯录` when global search does not produce a selectable contact. Do not press Enter from global search unless the selected result is visibly the exact target contact.
-- Before typing or sending a message, verify the current chat header or compose placeholder contains the target recipient, for example `发送给 张三`.
+- Before typing or sending a message, verify the current chat header or compose placeholder contains the target recipient, for example `发送给 示例联系人`.
 - For message compose boxes, use current AX/OCR text or fresh screenshot context to verify that the message body actually appeared before pressing Enter.
 - If the intended compose text is already visible in the current `AXTextArea`, do not write it again. Submit, finish, or explicitly clear and replace only when the visible text is wrong.
 - For Chinese or other non-ASCII text, paste through the runtime clipboard path and verify the pasted body is visible. Shell diagnostics should use `LC_ALL=en_US.UTF-8 pbcopy` and `LC_ALL=en_US.UTF-8 pbpaste` rather than inheriting `LC_ALL=C`.

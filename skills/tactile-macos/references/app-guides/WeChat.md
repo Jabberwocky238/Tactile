@@ -19,10 +19,15 @@
 - WeChat often exposes incomplete Accessibility elements; use OCR lines, screenshot context, and profile regions when AX elements are missing.
 - If `list-apps --best` selects WeCom/企业微信 for a plain WeChat task, rerun the compact matched list and explicitly choose `/Applications/WeChat.app` or bundle `com.tencent.xinWeChat`.
 - To message a contact, first focus the search field candidate and type only the contact name.
+- If `writetext` does not visibly populate the search field, paste the contact name with UTF-8 clipboard (`LC_ALL=en_US.UTF-8 pbcopy` plus `cmd+v`) and re-run OCR before selecting a result.
 - After typing the contact name, select a visible matching OCR or AX result only when it is clearly inside the search-result or chat-list region and corresponds to a contact/conversation row.
 - Use the top search-result profile region only after OCR or screenshot context confirms the target contact/conversation is the first result; otherwise wait and re-observe.
+- When search results contain sections such as `最常使用`, `群聊`, `聊天记录`, or `包含：<name>`, prefer the direct contact row under the contact/frequent section. Do not select group rows or chat-history snippets that merely contain the same name.
 - Only after the intended conversation is visibly selected in the chat header or conversation body should you focus the compose region and type the message body.
 - Do not press Enter or finish unless the message body is visibly present in the compose box or appears in the sent message history.
+- For sending meeting links or other structured messages, build the outgoing body from the trusted source text, paste it into the compose box via UTF-8 clipboard, then verify the visible draft contains the stable fields: recipient chat title, date/time, URL, meeting number or equivalent identifier, and requested reminder text.
+- OCR can misread similar Chinese characters and URL case, especially after a message has wrapped or moved into chat history. For final verification, combine OCR with screenshot/visual inspection and the original clipboard/source string; do not "correct" a URL from OCR output alone.
+- After pressing Enter to send, re-observe and treat the task as complete only when the compose box is empty and the just-sent message appears in the conversation history under the intended chat.
 - For contact profile or Moments tasks, first verify the intended contact is selected in the chat header. Open the top-right chat info panel, click the contact avatar/name in that panel, and verify the profile card contains the intended name plus stable details such as nickname or WeChat ID before using profile actions.
 - To open a contact's Moments from the profile card, click the "朋友圈" row content or thumbnails, then verify a separate Moments window/profile timeline is foreground. Clicking only the text label may leave the profile card unchanged.
 - When a Moments detail or media popup appears, treat it as a separate window. Re-observe the popup title and frame before clicking visual-only controls.
@@ -42,6 +47,7 @@
 - Do not treat every OCR match for the contact name as a selectable recipient; message history, files, meeting cards, and generic search suggestions can contain the same text.
 - Do not assume the first chat list row or top search result is the intended recipient unless OCR or screenshot context confirms it.
 - If AX is sparse, prefer OCR text match inside the relevant left-column result/list region before falling back to profile region centers.
+- Do not rely on OCR alone for exact spelling of a contact name in the message body; OCR may confuse visually similar characters. Verify the active chat header and selected row instead.
 - Do not mix screen coordinates from the main chat window, the right chat-info panel, profile card, Moments timeline, and Moments detail popup. Each can have a different active frame.
 - Do not repeat nearby clicks on Moments visual controls after one failed attempt; re-observe or change strategy.
 - Do not press Return to publish a Moments comment unless the comment draft is visible and WeChat's current UI indicates Return submits in that field or a visible submit button has focus.

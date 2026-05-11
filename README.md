@@ -33,7 +33,8 @@ This information already exists for screen readers and assistive technologies. T
 
 **Tactile gives agents a sense of touch.**
 
-> Demo video coming soon.
+- [Lark and WeChat workflow demo](assets/demo.mp4)
+- [CapCut video-editing workflow demo](assets/demo2.mp4)
 
 
 ## How to Use Tactile
@@ -51,6 +52,7 @@ If using API:
 ```txt
 export TACTILE_OPENAI_BASE_URL=xxxxxxx
 export TACTILE_OPENAI_API_KEY=xxxxxxx
+export TACTILE_MODEL='gpt-5.5'
 ```
 
 

@@ -42,13 +42,14 @@ bin/tactile-macos open Calculator --json
 
 1. Resolve the target app identifier/path with one compact matched `list-apps` call.
    If the match is ambiguous, for example personal WeChat and WeCom both match "微信", inspect the compact list and choose the intended bundle/path explicitly instead of relying on `--best`.
-2. For multi-step tasks, start with the end-to-end `workflow` for observation and bounded execution so one process owns observe-plan-act state and artifacts. This is the default path for AX-rich apps such as Feishu/Lark, Slack, browsers, and other Electron/WebView apps.
-3. Use manual `observe`, `traverse`, `ax`, or `input` commands instead of `workflow` only for single-step diagnostics, when a reliable `ax_path` is already known, when the workflow is unavailable or blocked, or for the final verified submit action after a high-risk draft has been checked.
-4. For high-risk external actions such as sending messages, posting comments, liking/reacting, payments, destructive edits, and account changes, split the task into locate, draft/open controls, verify, submit. Use a bounded workflow to navigate and draft or reveal controls; then manually verify the active target, visible context, and draft/action state from the latest observation before submitting.
-5. Use the observation priority `AX > OCR > visual planner`. Local OCR runs as a text fallback even for AX-rich apps; attach screenshots to the visual planner only when AX and OCR are insufficient. Treat coordinate input as the last resort, not a default navigation method.
-6. Send keyboard combos as one string, for example `cmd+f`.
-7. Re-observe after actions that should change UI state, using an existing pid with no activation when inspecting transient popups. When a new popup, modal, child window, or secondary app window appears, identify the active/top `AXWindow` by title and frame before the next click or text entry.
-8. If permissions are blocked, tell the user which macOS permission is missing and where to grant it.
+2. Before starting the concrete app operation flow, check `references/app-guides/` for a matching app guide. If one exists, read the relevant guide first and follow its app-specific constraints; do this before both `workflow` runs and manual `observe`/`ax`/`input` sequences.
+3. For multi-step tasks, start with the end-to-end `workflow` for observation and bounded execution so one process owns observe-plan-act state and artifacts. This is the default path for AX-rich apps such as Feishu/Lark, Slack, browsers, and other Electron/WebView apps.
+4. Use manual `observe`, `traverse`, `ax`, or `input` commands instead of `workflow` only for single-step diagnostics, when a reliable `ax_path` is already known, when the workflow is unavailable or blocked, or for the final verified submit action after a high-risk draft has been checked.
+5. For high-risk external actions such as sending messages, posting comments, liking/reacting, payments, destructive edits, and account changes, split the task into locate, draft/open controls, verify, submit. Use a bounded workflow to navigate and draft or reveal controls; then manually verify the active target, visible context, and draft/action state from the latest observation before submitting.
+6. Use the observation priority `AX > OCR > visual planner`. Local OCR runs as a text fallback even for AX-rich apps; attach screenshots to the visual planner only when AX and OCR are insufficient. Treat coordinate input as the last resort, not a default navigation method.
+7. Send keyboard combos as one string, for example `cmd+f`.
+8. Re-observe after actions that should change UI state, using an existing pid with no activation when inspecting transient popups. When a new popup, modal, child window, or secondary app window appears, identify the active/top `AXWindow` by title and frame before the next click or text entry.
+9. If permissions are blocked, tell the user which macOS permission is missing and where to grant it.
 
 ## CLI Examples
 
@@ -93,6 +94,13 @@ bin/tactile-macos workflow "switch org and draft a message" -- --target /Applica
 
 Keep message sends, payments, destructive edits, and account changes behind an explicit verification step: confirm the active target and draft body from the latest observation before pressing Enter or clicking a submit/send control.
 
+## Workflow Bailout Rules
+
+- If `workflow` repeats the same ineffective action, such as scrolling a picker several times without approaching the target option, stop that run and switch to manual `observe`/`ocr`/`ax`/`input`. Continuing a looping workflow is riskier than taking over with fresh observations.
+- Treat picker-backed controls as stateful popups. After every attempted picker change, close or commit the picker, then re-observe the closed field value before moving to the next field.
+- When a workflow or visual planner gives coordinate clicks in a picker, verify the same control and target text in a fresh OCR/AX observation before reusing coordinates. Detached popups can expose different window indexes and unusual screen coordinates.
+- Use `pgrep -af "tactile|MacosUse|workflow"` and `ps` only to diagnose an apparently stuck workflow. Kill only the specific workflow PIDs you started for the current task.
+
 ## Multi-Window And Popup Handling
 
 - Treat detached popups, profile cards, media viewers, menus, and modal child windows as separate targets. Re-run `traverse`, `observe`, or OCR after they appear and use the matching window frame or region for subsequent actions.
@@ -123,10 +131,13 @@ Keep message sends, payments, destructive edits, and account changes behind an e
 
 App-specific operation guidance lives under `references/app-guides/`.
 
-- Read `references/app-guides/Lark.md` before manually diagnosing Feishu/Lark organization switching, contact search, or message sending.
-- Read `references/app-guides/WeChat.md` before manually diagnosing WeChat search, message sending, profile cards, Moments, likes, or comments.
+- If the target app has a guide in this directory, read that guide before starting the concrete operation flow. This is mandatory for both automated `workflow` execution and manual diagnosis/control.
+- Read `references/app-guides/Lark.md` before operating Feishu/Lark organization switching, contact search, or message sending.
+- Read `references/app-guides/WeChat.md` before operating WeChat search, message sending, profile cards, Moments, likes, or comments.
+- Read `references/app-guides/TencentMeeting.md` before operating Tencent Meeting meeting scheduling, date/time selection, duration selection, or invite sharing.
+- Read `references/app-guides/Jianying.md` before operating Jianying/CapCut video imports, timeline assembly, speed changes, transitions, or export.
 
-The end-to-end workflow loads matching guides automatically and injects their planner guidance into each step.
+The end-to-end workflow loads matching guides automatically and injects their planner guidance into each step, but the operator must still read the matching guide first so the initial strategy and safety checks follow app-specific guidance.
 
 ## Artifacts
 
