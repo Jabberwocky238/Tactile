@@ -1,0 +1,28 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+.uv-cache/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test and quality-tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Tactile workflow artifacts
+.macos-app-workflow/
+macos-app-workflow/
+workflow-run-*.json
+ocr-screenshot-*.png
+step-*-screenshot.png
+step-*-visual-planner.png
+
+# Local logs and OS metadata
+*.log
+.DS_Store

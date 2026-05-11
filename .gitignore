@@ -3,6 +3,14 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# macOS filesystem metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
 # C extensions
 *.so
 
@@ -216,3 +224,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local agent/session artifacts
+.claw/
+.opencode/
+.macos-app-workflow/
+macos-app-workflow/

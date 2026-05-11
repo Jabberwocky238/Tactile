@@ -1,0 +1,81 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+if [ -n "${TACTILE_MACOS_WORKFLOW_DIR:-}" ]; then
+  workflow_dir=$TACTILE_MACOS_WORKFLOW_DIR
+elif [ -f "$script_dir/../scripts/macos_interface.py" ]; then
+  workflow_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+else
+  workflow_dir=$(CDPATH= cd -- "$script_dir/../macos-app-workflow" && pwd)
+fi
+
+find_uv() {
+  if [ -n "${TACTILE_UV:-}" ] && [ -x "$TACTILE_UV" ]; then
+    printf '%s\n' "$TACTILE_UV"
+    return 0
+  fi
+  if [ -n "${UV:-}" ] && [ -x "$UV" ]; then
+    printf '%s\n' "$UV"
+    return 0
+  fi
+  if command -v uv >/dev/null 2>&1; then
+    command -v uv
+    return 0
+  fi
+  for candidate in "$script_dir/uv" "$script_dir/../sidecars/uv" "$workflow_dir/../sidecars/uv"; do
+    if [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+cache_venv_dir() {
+  cache_root=${XDG_CACHE_HOME:-"$HOME/.cache"}
+  workflow_hash=$(printf '%s' "$workflow_dir" | cksum | awk '{print $1}')
+  printf '%s\n' "$cache_root/tactile/macos-workflow/venv-$workflow_hash"
+}
+
+venv_dir=${TACTILE_MACOS_WORKFLOW_VENV:-"$workflow_dir/.venv"}
+if ! mkdir -p "$venv_dir" 2>/dev/null || ! : >"$venv_dir/.write-test" 2>/dev/null; then
+  venv_dir=${TACTILE_MACOS_WORKFLOW_FALLBACK_VENV:-$(cache_venv_dir)}
+  mkdir -p "$venv_dir"
+fi
+rm -f "$venv_dir/.write-test" 2>/dev/null || true
+
+dependency_stamp() {
+  {
+    cksum "$workflow_dir/pyproject.toml" 2>/dev/null || true
+    cksum "$workflow_dir/uv.lock" 2>/dev/null || true
+  } | cksum | awk '{print $1 ":" $2}'
+}
+
+sync_python_env() {
+  uv_bin=$(find_uv) || {
+    printf '%s\n' "uv is required to create the macOS workflow Python environment." >&2
+    printf '%s\n' "Install uv or set TACTILE_UV to a uv binary path." >&2
+    exit 127
+  }
+  python_version=${TACTILE_MACOS_PYTHON_VERSION:-3.12}
+  if [ -f "$workflow_dir/uv.lock" ]; then
+    UV_PROJECT_ENVIRONMENT="$venv_dir" "$uv_bin" sync --project "$workflow_dir" --no-dev --frozen --python "$python_version" >&2
+  else
+    UV_PROJECT_ENVIRONMENT="$venv_dir" "$uv_bin" sync --project "$workflow_dir" --no-dev --python "$python_version" >&2
+  fi
+}
+
+python_bin="$venv_dir/bin/python"
+sync_stamp_file="$venv_dir/.tactile-deps-stamp"
+current_stamp=$(dependency_stamp)
+synced_stamp=$(cat "$sync_stamp_file" 2>/dev/null || true)
+if [ ! -x "$python_bin" ] || [ "$synced_stamp" != "$current_stamp" ]; then
+  sync_python_env
+  printf '%s\n' "$current_stamp" >"$sync_stamp_file"
+fi
+
+export VIRTUAL_ENV="$venv_dir"
+export PATH="$venv_dir/bin:$PATH"
+exec "$python_bin" "$@"

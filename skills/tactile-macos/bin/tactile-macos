@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -n "${TACTILE_MACOS_WORKFLOW_DIR:-}" ]; then
+  workflow_dir=$TACTILE_MACOS_WORKFLOW_DIR
+elif [ -f "$script_dir/../scripts/macos_interface.py" ]; then
+  workflow_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+else
+  workflow_dir=$(CDPATH= cd -- "$script_dir/../macos-app-workflow" && pwd)
+fi
+
+exec "$workflow_dir/bin/tactile-macos-python" "$workflow_dir/scripts/macos_interface.py" "$@"

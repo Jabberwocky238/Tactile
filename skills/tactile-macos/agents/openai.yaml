@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tactile"
+  short_description: "Operate macOS apps with Accessibility and OCR"
+  default_prompt: "Use $tactile to inspect and operate a local macOS app safely."

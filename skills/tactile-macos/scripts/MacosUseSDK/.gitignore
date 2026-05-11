@@ -1,0 +1,11 @@
+# SwiftPM build and local workspace state
+.build/
+.swiftpm/
+
+# Python caches from incidental helper execution
+__pycache__/
+*.py[cod]
+
+# Local logs and OS metadata
+*.log
+.DS_Store
