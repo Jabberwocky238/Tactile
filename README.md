@@ -35,6 +35,8 @@ This information already exists for screen readers and assistive technologies. T
 
 ### Lark and WeChat workflow
 
+This demo video was also edited by an agent using the Tactile skill to operate CapCut.
+
 https://github.com/user-attachments/assets/49dc6bfe-0661-4ab0-9099-be3849b4137a
 
 ### CapCut video-editing workflow
