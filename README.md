@@ -54,8 +54,6 @@ Ask your agent to configure this skill from the repository:
 Configure this skill for me (make sure to choose the version for the corresponding operating system): https://github.com/yliust/Tactile
 ```
 
-Skill entry points are OS-specific: macOS lives in `skills/tactile-macos/`, and Windows lives in `skills/tactile-windows/`; start with the `SKILL.md` in the matching directory.
-
 If using API:
 
 ```txt
