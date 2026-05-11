@@ -158,7 +158,7 @@ It also aims to encourage software ecosystems to expose better semantic structur
 
 Tactile is still early.
 
-The first version connects to Codex as a skill. In early tests on macOS applications with reasonable accessibility support, the accessibility-first workflow can significantly reduce screenshot reasoning and coordinate retries.
+The first version connects to Codex as a skill. In early tests on macOS applications with reasonable accessibility support, the accessibility-first workflow can significantly reduce screenshot reasoning and coordinate retries. As execution experience is distilled into reusable strategies, examples, and tool constraints, the skill can continue to improve task outcomes; this kind of experience reuse has proven valuable across many forms of automation work.
 
 We are also seeing that even many widely used applications still lack strong accessibility support. At the same time, developers are already being asked to adapt to a growing number of agent-specific interfaces. Tactile explores whether these paths can converge.
 
