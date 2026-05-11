@@ -12,7 +12,7 @@ Use this skill to inspect and operate local macOS applications through Accessibi
 - Run on macOS with Accessibility and Screen Recording permissions granted to the host app or terminal.
 - Have Swift/Xcode command line tools available for building the bundled `scripts/MacosUseSDK` tools on first use.
 - Have `uv` on `PATH`, or set `TACTILE_UV` to a uv binary path.
-- For LLM-driven workflows, set `OPENAI_API_KEY` or `MACOS_APP_WORKFLOW_OPENAI_API_KEY`. Optional: set `OPENAI_BASE_URL`, `MACOS_APP_WORKFLOW_OPENAI_BASE_URL`, or provider-specific `MACOS_APP_WORKFLOW_<PROVIDER>_API_KEY` / `BASE_URL`.
+- For LLM-driven workflows, set `TACTILE_OPENAI_API_KEY` and optionally `TACTILE_OPENAI_BASE_URL`.
 
 ## Primary CLI
 

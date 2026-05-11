@@ -1300,7 +1300,6 @@ def choose_app_capabilities(
     visual_max_width: int,
     include_menus: bool,
     model: str | None,
-    provider: str | None,
 ) -> dict[str, Any]:
     fallback_workflow_mode = resolve_workflow_mode("auto", app_profile)
     fallback_visual_planning = resolve_visual_planning("auto", fallback_workflow_mode, app_profile)
@@ -1343,7 +1342,7 @@ def choose_app_capabilities(
         screenshot_attached=bool(planner_images),
     )
     call_llm, _ = load_llm_helpers()
-    llm_kwargs = {key: value for key, value in {"model_name": model, "provider": provider}.items() if value}
+    llm_kwargs = {key: value for key, value in {"model_name": model}.items() if value}
     if planner_images:
         llm_kwargs["image_base64"] = planner_images
     raw = call_llm(prompt, **llm_kwargs)
@@ -1962,7 +1961,6 @@ def make_plan(
     workflow_mode: str,
     app_profile: AppProfile,
     model: str | None,
-    provider: str | None,
     mock_plan: bool,
     allow_fallback: bool,
     planner_images: list[str] | None = None,
@@ -1985,7 +1983,7 @@ def make_plan(
     )
     try:
         call_llm, _ = load_llm_helpers()
-        llm_kwargs = {k: v for k, v in {"model_name": model, "provider": provider}.items() if v}
+        llm_kwargs = {k: v for k, v in {"model_name": model}.items() if v}
         if planner_images:
             llm_kwargs["image_base64"] = planner_images
         raw = call_llm(prompt, **llm_kwargs)
@@ -2861,7 +2859,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--best", action="store_true", help="With --list-apps, print only the preferred matching app record. Implies compact ranking.")
     parser.add_argument("--limit", type=int, help="With --list-apps, maximum number of records to print.")
     parser.add_argument("--model", default=None, help="Override model_name passed to utils.llm_config.call_llm.")
-    parser.add_argument("--provider", default=None, help="Override provider passed to utils.llm_config.call_llm.")
     parser.add_argument("--mode", choices=WORKFLOW_MODES, default="auto", help="Workflow mode. auto chooses from fixed app profiles or the capability selector.")
     parser.add_argument("--capability-selection", choices=CAPABILITY_SELECTION_MODES, default="auto", help="How auto mode chooses app capabilities. auto uses fixed profiles for known apps and asks the LLM for unknown apps.")
     parser.add_argument("--visual-planning", choices=VISUAL_PLANNING_MODES, default="auto", help="Attach screenshots to the planner. auto enables it for AX-poor/profile-selected apps.")
@@ -2990,7 +2987,6 @@ def main(argv: list[str] | None = None) -> int:
                     visual_max_width=args.visual_max_width,
                     include_menus=args.include_menus,
                     model=args.model,
-                    provider=args.provider,
                 )
             except Exception as exc:
                 fallback_mode = resolve_workflow_mode("auto", app_profile)
@@ -3119,7 +3115,6 @@ def main(argv: list[str] | None = None) -> int:
             workflow_mode=workflow_mode,
             app_profile=app_profile,
             model=args.model,
-            provider=args.provider,
             mock_plan=args.mock_plan,
             allow_fallback=(not args.no_fallback and (not args.execute or args.mock_plan)),
             planner_images=planner_images,

@@ -446,7 +446,6 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
                     visual_max_width=1280,
                     include_menus=False,
                     model=None,
-                    provider=None,
                 )
         finally:
             workflow.capture_region = original_capture_region
@@ -1099,7 +1098,6 @@ class CodexLlmWorkflowExecutionTests(unittest.TestCase):
                 workflow_mode="ax-poor",
                 app_profile=workflow.resolve_app_profile("/Applications/WeChat.app", {"display_name": "WeChat"}),
                 model=None,
-                provider=None,
                 mock_plan=False,
                 allow_fallback=False,
                 planner_images=["abc123"],
