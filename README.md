@@ -33,8 +33,17 @@ This information already exists for screen readers and assistive technologies. T
 
 **Tactile gives agents a sense of touch.**
 
-- [Lark and WeChat workflow demo](assets/demo.mp4)
-- [CapCut video-editing workflow demo](assets/demo2.mp4)
+### Lark and WeChat workflow
+
+<video src="https://raw.githubusercontent.com/yliust/Tactile/main/assets/demo.mp4" controls width="100%"></video>
+
+[Open video file](assets/demo.mp4)
+
+### CapCut video-editing workflow
+
+<video src="https://raw.githubusercontent.com/yliust/Tactile/main/assets/demo2.mp4" controls width="100%"></video>
+
+[Open video file](assets/demo2.mp4)
 
 
 ## How to Use Tactile
