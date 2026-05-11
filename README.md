@@ -41,14 +41,16 @@ This information already exists for screen readers and assistive technologies. T
 Ask your agent to configure this skill from the repository:
 
 ```txt
-Configure this skill for me: https://github.com/yliust/Tactile
+Configure this skill for me (make sure to choose the version for the corresponding operating system): https://github.com/yliust/Tactile
 ```
 
-Configure your API environment to use workflow:
+Skill entry points are OS-specific: macOS lives in `skills/tactile-macos/`, and Windows lives in `skills/tactile-windows/`; start with the `SKILL.md` in the matching directory.
+
+If using API:
 
 ```txt
-export OPENAI_BASE_URL=xxxxxxx
-export OPENAI_API_KEY=xxxxxxx
+export TACTILE_OPENAI_BASE_URL=xxxxxxx
+export TACTILE_OPENAI_API_KEY=xxxxxxx
 ```
 
 
@@ -158,7 +160,7 @@ It also aims to encourage software ecosystems to expose better semantic structur
 
 Tactile is still early.
 
-The first version connects to Codex as a skill. In early tests on macOS applications with reasonable accessibility support, the accessibility-first workflow can significantly reduce screenshot reasoning and coordinate retries. As execution experience is distilled into reusable strategies, examples, and tool constraints, the skill can continue to improve task outcomes; this kind of experience reuse has proven valuable across many forms of automation work.
+The first version connects to Codex as a skill. In early tests on macOS applications with reasonable accessibility support, the accessibility-first workflow can significantly reduce screenshot reasoning and coordinate retries, though of course it is not universal. As execution experience is distilled into reusable strategies, examples, and tool constraints, the skill can continue to improve task outcomes; this kind of experience reuse has proven valuable across many forms of automation work.
 
 We are also seeing that even many widely used applications still lack strong accessibility support. At the same time, developers are already being asked to adapt to a growing number of agent-specific interfaces. Tactile explores whether these paths can converge.
 
