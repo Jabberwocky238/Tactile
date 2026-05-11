@@ -24,7 +24,7 @@ When an agent needs to use an application, Tactile asks it not to begin with scr
 
 In that sense, Tactile gives agents a way to feel the structure of software before reaching for vision.
 
-This information already exists for screen readers and assistive technologies. Tactile makes it the first entry point for agents as well.
+This information already exists for screen readers and assistive technologies. Tactile makes it the first entry point for agents as well. The easier software is for Tactile to operate, the more likely it is to support genuinely accessible interaction for humans as well.
 
 **Agent-ready software should also be human-accessible software.**
 
