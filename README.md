@@ -46,72 +46,19 @@ https://github.com/user-attachments/assets/7bc0f05e-9228-4cf1-abe3-ffb7e4722be2
 
 ## How to Use Tactile
 
-Tactile is meant to be installed as a Codex skill. Choose the skill that matches the operating system where Codex will operate apps:
-
-- Windows: `skills/tactile-windows`
-- macOS: `skills/tactile-macos`
-
-The Windows skill bundles its Windows UI Automation runtime at `skills/tactile-windows/vendor/WindowsUseSDK`, so a fresh clone does not need a separate WindowsUseSDK checkout.
-
-### Ask Codex to Install
-
-In Codex, ask it to install the matching skill from this repository:
+Ask your agent to configure this skill from the repository:
 
 ```txt
-Install the Tactile skill for my current operating system from https://github.com/yliust/Tactile.
-On Windows, install skills/tactile-windows as tactile-windows.
-On macOS, install skills/tactile-macos as tactile-macos.
-After installing, use the skill to verify it can observe a simple app.
+Configure this skill for me (make sure to choose the version for the corresponding operating system): https://github.com/yliust/Tactile
 ```
 
-Then start a fresh Codex session if the skill list does not refresh automatically.
-
-### Manual Install Fallback
-
-Windows PowerShell:
-
-```powershell
-git clone https://github.com/yliust/Tactile
-cd Tactile
-
-$dest = "$env:USERPROFILE\.codex\skills\tactile-windows"
-New-Item -ItemType Directory -Force $dest | Out-Null
-Copy-Item .\skills\tactile-windows\* $dest -Recurse -Force
-```
-
-macOS:
-
-```bash
-git clone https://github.com/yliust/Tactile
-cd Tactile
-
-mkdir -p ~/.codex/skills/tactile-macos
-cp -R skills/tactile-macos/. ~/.codex/skills/tactile-macos/
-```
-
-### Verify Through Codex
-
-After installation, ask Codex to use the installed skill, not raw screenshots:
+If using API:
 
 ```txt
-Use $tactile-windows to list Windows apps, open Calculator, and observe its UIA tree.
-Start with list-apps/open/observe and only fall back to OCR or coordinates when UIA is insufficient.
+export TACTILE_OPENAI_BASE_URL=xxxxxxx
+export TACTILE_OPENAI_API_KEY=xxxxxxx
+export TACTILE_MODEL='gpt-5.5'
 ```
-
-On macOS, use `$tactile-macos` and a simple app such as Calculator, TextEdit, or Safari.
-
-### Optional Workflow API Variables
-
-These are only needed when using the skill's bundled LLM workflow command directly. Codex can also drive the skill step by step with its own current model.
-
-```powershell
-python -m pip install "openai>=1.40,<3"
-$env:TACTILE_OPENAI_API_KEY="sk-..."
-$env:TACTILE_OPENAI_BASE_URL="https://api.example.com/v1"
-$env:TACTILE_MODEL="gpt-5.5"
-```
-
-If your Windows machine uses a non-standard Python launcher, set `TACTILE_WINDOWS_PYTHON` to the desired Python executable.
 
 
 ## Why Tactile?
