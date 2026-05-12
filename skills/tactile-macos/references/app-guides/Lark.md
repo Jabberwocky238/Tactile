@@ -15,6 +15,13 @@
 
 ## Planner Guidance
 
+- For routine actions, fast commands take precedence over `workflow`: `feishu-open-section`, `feishu-search`, `feishu-open-app`, `feishu-open-chat`, `feishu-send-message`, `feishu-switch-org`, `feishu-create-doc`, and `feishu-open-url`. Do not start generic `workflow` for supported routine Feishu/Lark operations unless a fast command fails or the operation is unsupported.
+- For routine fast commands, skip `list-apps`, command help, and source inspection. The commands default to Feishu/Lark and should be attempted directly; resolve the app manually only after a fast command fails to open the target.
+- Observed macOS navigation labels include `消息`, `知识问答`, `日历`, `多维表格`, `云文档`, `视频会议`, `飞行社`, `工作台`, `应用中心`, `通讯录`, `更多`, plus `搜索（⌘＋K）`, `创建`, profile, and organization account buttons.
+- Use `feishu-open-section <label>` for main navigation, `feishu-open-app <query>` for workplace/apps such as reports or approvals, and `feishu-search <query> --open` for generic global search.
+- `feishu-send-message` is the fast path for routine messaging. It opens the chat with global search, focuses the `发送给 ...` compose text area, pastes the message, and sends only when `--send` is explicit.
+- `feishu-create-doc` is the fast path for cloud document creation. It uses Feishu only to trigger the new doc menu; the newly created document opens in the default browser, where title/body paste and optional URL sharing continue from the foreground browser.
+- For a combined prompt like "切换组织到 LGAI，给石展鹏发消息", prefer `feishu-send-message --org "LGAI" --chat "石展鹏" --message "..." --send` so one command owns the org switch and message send.
 - For organization switching, prefer the bottom account or organization controls exposed as AX buttons.
 - After clicking `更多账号`, choose the target organization from the visible popup in the same workflow loop.
 - Do not request a fresh target activation to inspect transient organization popups; focus changes can close them.

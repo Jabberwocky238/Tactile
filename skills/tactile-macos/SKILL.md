@@ -38,12 +38,48 @@ bin/tactile-macos list-apps --match '微信|WeChat|飞书|Feishu|Lark' --compact
 bin/tactile-macos open Calculator --json
 ```
 
+## Feishu/Lark Fast Path
+
+Feishu/Lark common operations are an explicit exception to the generic multi-step workflow rule below. For routine Feishu/Lark tasks, MUST use the dedicated fast commands first, not the generic LLM `workflow`. Only fall back to `workflow` when a required fast command does not exist, a fast command returns failure, or the task is outside the supported fast-command surface.
+
+For routine Feishu/Lark fast commands, do not spend a turn resolving the app with `list-apps`, reading command help, or inspecting source code. The fast commands already default to the Feishu/Lark bundle and have built-in fallback targets. Resolve the app manually only when a fast command fails to open Feishu/Lark or the user explicitly asks for a non-default installation.
+
+The fast commands avoid multi-step planner calls and use the actual exposed Feishu controls observed on macOS: `消息`, `知识问答`, `日历`, `多维表格`, `云文档`, `视频会议`, `飞行社`, `工作台`, `应用中心`, `通讯录`, `更多`, `搜索（⌘＋K）`, `创建`, and organization account buttons.
+
+Use these commands for common Feishu operations:
+
+```bash
+bin/tactile-macos feishu-list-buttons
+bin/tactile-macos feishu-open-section 消息
+bin/tactile-macos feishu-open-section 日历
+bin/tactile-macos feishu-search "飞书汇报" --open
+bin/tactile-macos feishu-open-app "飞书汇报"
+bin/tactile-macos feishu-open-chat --chat "张三"
+bin/tactile-macos feishu-send-message --chat "张三" --message "收到" --send
+bin/tactile-macos feishu-send-message --org "LGAI" --chat "张三" --message "收到" --send
+bin/tactile-macos feishu-switch-org --name "个人用户"
+bin/tactile-macos feishu-create-doc --org "个人用户" --title "健身营养学综述" --body "..." --copy-url
+bin/tactile-macos feishu-create-doc --org "个人用户" --title "健身营养学综述" --body "..." --send-to "石展鹏" --send
+bin/tactile-macos feishu-open-url --url "lark://..."
+```
+
+Defaults are speed-oriented: no LLM planning, no full-window OCR, no clipboard restore, no preflight help/source reads, and no post-action verification unless `--verify` is passed. For explicit user requests to send a routine message, send directly with `--send`; use `--draft-only --verify` only when the user asks to draft, preview, or handle unusually sensitive content.
+
+Intent routing examples:
+
+- If the user says "打开飞书", use `feishu-list-buttons`, `feishu-open-section`, or direct app open depending on the requested end state.
+- If the user says "切换组织到 LGAI", use `feishu-switch-org --name "LGAI"`.
+- If the user says "给石展鹏发消息", use `feishu-send-message --chat "石展鹏" --message "..." --send`.
+- If the user combines organization switching and messaging, prefer one command: `feishu-send-message --org "LGAI" --chat "石展鹏" --message "..." --send`; do not use `workflow` or split draft/send unless the user asks.
+- If the user asks to create a Feishu cloud document, use `feishu-create-doc` first. Feishu opens the newly created document in the default browser, so this fast command uses Feishu to trigger creation, then pastes title/body and optionally shares the copied browser URL from the browser foreground.
+- If the user asks for 飞书汇报, 审批, 工作台应用, or a named app, use `feishu-open-app "<query>"` or `feishu-search "<query>" --open`.
+
 ## Core Workflow
 
 1. Resolve the target app identifier/path with one compact matched `list-apps` call.
    If the match is ambiguous, for example personal WeChat and WeCom both match "微信", inspect the compact list and choose the intended bundle/path explicitly instead of relying on `--best`.
 2. Before starting the concrete app operation flow, check `references/app-guides/` for a matching app guide. If one exists, read the relevant guide first and follow its app-specific constraints; do this before both `workflow` runs and manual `observe`/`ax`/`input` sequences.
-3. For multi-step tasks, start with the end-to-end `workflow` for observation and bounded execution so one process owns observe-plan-act state and artifacts. This is the default path for AX-rich apps such as Feishu/Lark, Slack, browsers, and other Electron/WebView apps.
+3. For multi-step tasks, start with the end-to-end `workflow` for observation and bounded execution so one process owns observe-plan-act state and artifacts. This is the default path for AX-rich apps such as Slack, browsers, and other Electron/WebView apps. Feishu/Lark routine tasks are excluded from this default and must use the `feishu-*` fast commands first.
 4. Use manual `observe`, `traverse`, `ax`, or `input` commands instead of `workflow` only for single-step diagnostics, when a reliable `ax_path` is already known, when the workflow is unavailable or blocked, or for the final verified submit action after a high-risk draft has been checked.
 5. For high-risk external actions such as sending messages, posting comments, liking/reacting, payments, destructive edits, and account changes, split the task into locate, draft/open controls, verify, submit. Use a bounded workflow to navigate and draft or reveal controls; then manually verify the active target, visible context, and draft/action state from the latest observation before submitting.
 6. Use the observation priority `AX > OCR > visual planner`. Local OCR runs as a text fallback even for AX-rich apps; attach screenshots to the visual planner only when AX and OCR are insufficient. Treat coordinate input as the last resort, not a default navigation method.

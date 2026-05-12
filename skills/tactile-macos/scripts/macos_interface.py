@@ -296,6 +296,17 @@ def load_workflow_module(repo: Path):
     return workflow
 
 
+def load_feishu_fast_module():
+    module_path = SCRIPTS_ROOT / "feishu_fast.py"
+    spec = importlib.util.spec_from_file_location("_macos_app_workflow_feishu_fast", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"could not load Feishu fast module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def write_or_print(data: Any, output: Path | None) -> None:
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     output = session_scoped_output_path(output)
@@ -694,6 +705,18 @@ def cmd_workflow(args: argparse.Namespace) -> int:
     return run(cmd, repo=repo, env=env).returncode
 
 
+def cmd_feishu_fast(args: argparse.Namespace) -> int:
+    repo = repo_path(args.repo)
+    module = load_feishu_fast_module()
+    return module.dispatch(
+        args,
+        repo=repo,
+        ensure_products=ensure_products,
+        debug_tool=debug_tool,
+        write_or_print=write_or_print,
+    )
+
+
 def cmd_artifact_dir(args: argparse.Namespace) -> int:
     print(session_artifact_dir(cwd=Path.cwd()))
     return 0
@@ -862,6 +885,101 @@ def build_parser() -> argparse.ArgumentParser:
     workflow.add_argument("instruction")
     workflow.add_argument("workflow_args", nargs=argparse.REMAINDER)
     workflow.set_defaults(func=cmd_workflow)
+
+    feishu_list_buttons = subparsers.add_parser("feishu-list-buttons", help="List visible Feishu/Lark labeled navigation and account controls.")
+    add_global(feishu_list_buttons)
+    feishu_list_buttons.add_argument("--target", default="com.electron.lark")
+    feishu_list_buttons.add_argument("--output", type=Path)
+    feishu_list_buttons.set_defaults(func=cmd_feishu_fast)
+
+    feishu_open_section = subparsers.add_parser("feishu-open-section", help="Fast Feishu/Lark path: open a visible left navigation section by AX label.")
+    add_global(feishu_open_section)
+    feishu_open_section.add_argument("section", help="Section label or alias, e.g. 消息, 日历, 云文档, 工作台, contacts.")
+    feishu_open_section.add_argument("--target", default="com.electron.lark")
+    feishu_open_section.add_argument("--dry-run", action="store_true")
+    feishu_open_section.add_argument("--output", type=Path)
+    feishu_open_section.set_defaults(func=cmd_feishu_fast)
+
+    feishu_search = subparsers.add_parser("feishu-search", help="Fast Feishu/Lark path: open global search with Cmd+K and paste a query.")
+    add_global(feishu_search)
+    feishu_search.add_argument("query")
+    feishu_search.add_argument("--target", default="com.electron.lark")
+    feishu_search.add_argument("--open", action="store_true", help="Press Enter after pasting the query.")
+    feishu_search.add_argument("--wait-ms", type=int, default=100)
+    feishu_search.add_argument("--restore-clipboard", action="store_true")
+    feishu_search.add_argument("--output", type=Path)
+    feishu_search.set_defaults(func=cmd_feishu_fast)
+
+    feishu_open_app = subparsers.add_parser("feishu-open-app", help="Fast Feishu/Lark path: search and open an app/workplace item such as 飞书汇报.")
+    add_global(feishu_open_app)
+    feishu_open_app.add_argument("query")
+    feishu_open_app.add_argument("--target", default="com.electron.lark")
+    feishu_open_app.add_argument("--open", action="store_true", default=True)
+    feishu_open_app.add_argument("--wait-ms", type=int, default=100)
+    feishu_open_app.add_argument("--restore-clipboard", action="store_true")
+    feishu_open_app.add_argument("--output", type=Path)
+    feishu_open_app.set_defaults(func=cmd_feishu_fast)
+
+    feishu_open_chat = subparsers.add_parser("feishu-open-chat", help="Fast Feishu/Lark path: open a chat/contact through global search.")
+    add_global(feishu_open_chat)
+    feishu_open_chat.add_argument("--target", default="com.electron.lark")
+    feishu_open_chat.add_argument("--chat", required=True)
+    feishu_open_chat.add_argument("--wait-ms", type=int, default=100)
+    feishu_open_chat.add_argument("--verify", action="store_true")
+    feishu_open_chat.add_argument("--restore-clipboard", action="store_true")
+    feishu_open_chat.add_argument("--output", type=Path)
+    feishu_open_chat.set_defaults(func=cmd_feishu_fast)
+
+    feishu_send_message = subparsers.add_parser("feishu-send-message", help="Fast Feishu/Lark path: open chat, focus compose, paste a message, optionally send.")
+    add_global(feishu_send_message)
+    feishu_send_message.add_argument("--target", default="com.electron.lark")
+    feishu_send_message.add_argument("--chat", required=True)
+    feishu_send_message.add_argument("--message", required=True)
+    feishu_send_message.add_argument("--org", help="Switch to this organization before opening the chat.")
+    feishu_send_message.add_argument("--send", action="store_true", help="Press the send key after pasting.")
+    feishu_send_message.add_argument("--draft-only", action="store_true", help="Paste the draft but do not send.")
+    feishu_send_message.add_argument("--send-key", default="enter")
+    feishu_send_message.add_argument("--wait-ms", type=int, default=100)
+    feishu_send_message.add_argument("--verify", action="store_true")
+    feishu_send_message.add_argument("--restore-clipboard", action="store_true")
+    feishu_send_message.add_argument("--keep-existing-draft", action="store_true")
+    feishu_send_message.add_argument("--output", type=Path)
+    feishu_send_message.set_defaults(func=cmd_feishu_fast)
+
+    feishu_switch_org = subparsers.add_parser("feishu-switch-org", help="Fast Feishu/Lark path: switch by visible organization/account button label.")
+    add_global(feishu_switch_org)
+    feishu_switch_org.add_argument("--target", default="com.electron.lark")
+    feishu_switch_org.add_argument("--name", required=True)
+    feishu_switch_org.add_argument("--wait-ms", type=int, default=120)
+    feishu_switch_org.add_argument("--dry-run", action="store_true")
+    feishu_switch_org.add_argument("--output", type=Path)
+    feishu_switch_org.set_defaults(func=cmd_feishu_fast)
+
+    feishu_open_url = subparsers.add_parser("feishu-open-url", help="Open a recognized Feishu/Lark URL directly through macOS.")
+    add_global(feishu_open_url)
+    feishu_open_url.add_argument("--url", required=True)
+    feishu_open_url.add_argument("--output", type=Path)
+    feishu_open_url.set_defaults(func=cmd_feishu_fast)
+
+    feishu_create_doc = subparsers.add_parser("feishu-create-doc", help="Fast Feishu/Lark path: create a cloud doc, then optionally fill/share it in the default browser.")
+    add_global(feishu_create_doc)
+    feishu_create_doc.add_argument("--target", default="com.electron.lark")
+    feishu_create_doc.add_argument("--org", help="Switch to this organization before creating the doc.")
+    feishu_create_doc.add_argument("--title", help="Paste this title into the browser doc after it opens.")
+    feishu_create_doc.add_argument("--body", help="Paste this body into the browser doc after it opens.")
+    feishu_create_doc.add_argument("--copy-url", action="store_true", help="Copy the frontmost browser URL after creating/filling the doc.")
+    feishu_create_doc.add_argument("--send-to", help="Open this chat and draft/send the created document URL.")
+    feishu_create_doc.add_argument("--send", action="store_true", help="Send the document link when --send-to is provided.")
+    feishu_create_doc.add_argument("--draft-only", action="store_true", help="Draft the document link but do not send it.")
+    feishu_create_doc.add_argument("--send-key", default="enter")
+    feishu_create_doc.add_argument("--message-prefix", help="Optional text to put before the title and URL when sharing.")
+    feishu_create_doc.add_argument("--wait-ms", type=int, default=100)
+    feishu_create_doc.add_argument("--browser-wait-ms", type=int, default=2500)
+    feishu_create_doc.add_argument("--autosave-wait-ms", type=int, default=800)
+    feishu_create_doc.add_argument("--restore-clipboard", action="store_true")
+    feishu_create_doc.add_argument("--dry-run", action="store_true")
+    feishu_create_doc.add_argument("--output", type=Path)
+    feishu_create_doc.set_defaults(func=cmd_feishu_fast)
 
     artifact_dir = subparsers.add_parser("artifact-dir", help="Print the session-scoped macOS workflow artifact directory.")
     artifact_dir.set_defaults(func=cmd_artifact_dir)
