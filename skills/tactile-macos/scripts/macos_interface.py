@@ -307,6 +307,17 @@ def load_feishu_fast_module():
     return module
 
 
+def load_app_exploration_module():
+    module_path = SCRIPTS_ROOT / "app_exploration.py"
+    spec = importlib.util.spec_from_file_location("_macos_app_exploration", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"could not load app exploration module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def write_or_print(data: Any, output: Path | None) -> None:
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     output = session_scoped_output_path(output)
@@ -326,6 +337,18 @@ def write_text_or_print(text: str, output: Path | None) -> None:
         print(output)
     else:
         print(text, end="")
+
+
+def write_jsonl_or_print(rows: list[dict[str, Any]], output: Path | None) -> Path | None:
+    text = "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in rows)
+    output = session_scoped_output_path(output)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        print(output)
+        return output
+    print(text, end="")
+    return None
 
 
 def attach_ax_paths(elements: list[dict[str, Any]], element_index: dict[str, Any]) -> list[dict[str, Any]]:
@@ -778,6 +801,52 @@ def cmd_plan_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_profile_app(args: argparse.Namespace) -> int:
+    module = load_app_exploration_module()
+    profile = module.profile_target(args.target, guide_dir=args.guide_dir or module.APP_GUIDE_DIR)
+    write_or_print(profile, args.output)
+    return 0
+
+
+def cmd_catalog_actions(args: argparse.Namespace) -> int:
+    module = load_app_exploration_module()
+    profile = module.load_json_file(args.profile)
+    catalog = module.catalog_from_profile(profile)
+    write_or_print(catalog, args.output)
+    return 0
+
+
+def cmd_run_adapter(args: argparse.Namespace) -> int:
+    module = load_app_exploration_module()
+    inputs: dict[str, Any] = {}
+    if args.inputs_json:
+        loaded_inputs = json.loads(args.inputs_json)
+        if not isinstance(loaded_inputs, dict):
+            raise SystemExit("--inputs-json must decode to a JSON object")
+        inputs = loaded_inputs
+    result = module.run_adapter(
+        args.app,
+        args.task,
+        strategy=args.strategy,
+        verify=args.verify,
+        catalog_path=args.catalog,
+        inputs=inputs,
+    )
+    write_or_print(result, args.output)
+    return 0
+
+
+def cmd_eval_suite(args: argparse.Namespace) -> int:
+    module = load_app_exploration_module()
+    runs, summary = module.eval_suite(args.suite, strategy=args.strategy, runs=args.runs)
+    if args.output:
+        output = write_jsonl_or_print(runs, args.output)
+        print(json.dumps({"output": os.fspath(output), "summary": summary}, ensure_ascii=False, indent=2))
+    else:
+        write_or_print({"runs": runs, "summary": summary}, None)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -879,6 +948,34 @@ def build_parser() -> argparse.ArgumentParser:
     ocr.add_argument("--contains", help="Only keep OCR lines containing this literal text.")
     ocr.add_argument("--output", type=Path)
     ocr.set_defaults(func=cmd_ocr)
+
+    profile_app = subparsers.add_parser("profile-app", help="Statically profile an app, URL, or bundle for public/source-aware automation surfaces.")
+    profile_app.add_argument("--target", required=True, help="App bundle path, bundle identifier/name, or web URL.")
+    profile_app.add_argument("--guide-dir", type=Path, help="Directory containing Tactile app guides. Defaults to references/app-guides.")
+    profile_app.add_argument("--output", type=Path)
+    profile_app.set_defaults(func=cmd_profile_app)
+
+    catalog_actions = subparsers.add_parser("catalog-actions", help="Build a CapabilityCatalog from a profile-app JSON output.")
+    catalog_actions.add_argument("--profile", type=Path, required=True)
+    catalog_actions.add_argument("--output", type=Path)
+    catalog_actions.set_defaults(func=cmd_catalog_actions)
+
+    run_adapter = subparsers.add_parser("run-adapter", help="Route one catalog task through a dry-run adapter strategy.")
+    run_adapter.add_argument("--app", required=True, help="Known app key/name such as feishu, wechat, or tencent-meeting.")
+    run_adapter.add_argument("--task", required=True, help="Action id such as feishu.open_messages.")
+    run_adapter.add_argument("--strategy", choices=["baseline", "code-aware", "ax", "visual"], default="code-aware")
+    run_adapter.add_argument("--catalog", type=Path, help="Optional catalog-actions JSON file. When omitted, a built-in catalog is generated.")
+    run_adapter.add_argument("--verify", action="store_true", help="Require a structured verifier in the dry-run result.")
+    run_adapter.add_argument("--inputs-json", help="Optional JSON object with task input placeholders.")
+    run_adapter.add_argument("--output", type=Path)
+    run_adapter.set_defaults(func=cmd_run_adapter)
+
+    eval_suite = subparsers.add_parser("eval-suite", help="Run a dry-run adapter evaluation suite and emit JSONL run records.")
+    eval_suite.add_argument("--suite", type=Path, required=True, help="JSON or simple YAML suite file.")
+    eval_suite.add_argument("--strategy", choices=["baseline", "code-aware", "ax", "visual"], default="code-aware")
+    eval_suite.add_argument("--runs", type=int, default=10)
+    eval_suite.add_argument("--output", type=Path, help="Write run records as JSONL.")
+    eval_suite.set_defaults(func=cmd_eval_suite)
 
     workflow = subparsers.add_parser("workflow", help="Run the end-to-end LLM observe-plan-act workflow.")
     add_global(workflow)

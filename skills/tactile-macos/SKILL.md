@@ -100,6 +100,19 @@ bin/tactile-macos ocr --pid 12345 --format tsv
 bin/tactile-macos plan-log "$artifact_dir/<run>.json"
 ```
 
+## Source/Protocol Exploration
+
+Use these commands to inspect app automation surfaces and evaluate dry-run adapters without mutating app state:
+
+```bash
+bin/tactile-macos profile-app --target com.electron.lark --output "$artifact_dir/lark-profile.json"
+bin/tactile-macos catalog-actions --profile "$artifact_dir/lark-profile.json" --output "$artifact_dir/lark-catalog.json"
+bin/tactile-macos run-adapter --app feishu --task feishu.open_messages --strategy code-aware --verify
+bin/tactile-macos eval-suite --suite references/eval-suites/domestic-apps.yaml --strategy code-aware --runs 10 --output "$artifact_dir/domestic-code-aware.jsonl"
+```
+
+`run-adapter` and `eval-suite` are dry-run by default. They route actions and require structured verifiers, but they do not click, type, send, submit, delete, or alter application data.
+
 To debug AX geometry visually, add `--debug-ax-grid` to commands that know a target PID. This launches the same red overlay grid used by the Swift traversal highlight tests without polluting command stdout:
 
 ```bash
@@ -172,6 +185,7 @@ App-specific operation guidance lives under `references/app-guides/`.
 - Read `references/app-guides/WeChat.md` before operating WeChat search, message sending, profile cards, Moments, likes, or comments.
 - Read `references/app-guides/AppleMusic.md` before operating Apple Music search, album navigation, playlist selection, queue actions, or playback.
 - Read `references/app-guides/TencentMeeting.md` before operating Tencent Meeting meeting scheduling, date/time selection, duration selection, or invite sharing.
+- Read `references/app-guides/Zoom.md` before operating Zoom meeting scheduling, date/time selection, calendar selection, saving, or invite extraction.
 - Read `references/app-guides/Jianying.md` before operating Jianying/CapCut video imports, timeline assembly, speed changes, transitions, or export.
 
 The end-to-end workflow loads matching guides automatically and injects their planner guidance into each step, but the operator must still read the matching guide first so the initial strategy and safety checks follow app-specific guidance.

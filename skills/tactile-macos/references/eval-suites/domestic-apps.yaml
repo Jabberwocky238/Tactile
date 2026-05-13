@@ -1,0 +1,45 @@
+name: domestic-apps-v1
+description: Dry-run reliability suite for source/protocol-aware Tactile adapters.
+tasks:
+  - app: feishu
+    task: feishu.open_app
+  - app: feishu
+    task: feishu.open_messages
+  - app: feishu
+    task: feishu.open_calendar
+  - app: feishu
+    task: feishu.open_docs
+  - app: feishu
+    task: feishu.open_workplace
+  - app: feishu
+    task: feishu.search
+  - app: feishu
+    task: feishu.switch_org
+  - app: feishu
+    task: feishu.open_chat_draft
+  - app: feishu
+    task: feishu.create_doc_draft
+  - app: wechat
+    task: wechat.open_app
+  - app: wechat
+    task: wechat.search_contact
+  - app: wechat
+    task: wechat.open_chat
+  - app: wechat
+    task: wechat.draft_message
+  - app: wechat
+    task: wechat.open_chat_info
+  - app: wechat
+    task: wechat.open_profile
+  - app: tencent-meeting
+    task: tencent-meeting.open_app
+  - app: tencent-meeting
+    task: tencent-meeting.open_schedule
+  - app: tencent-meeting
+    task: tencent-meeting.open_schedule_dialog
+  - app: tencent-meeting
+    task: tencent-meeting.draft_topic
+  - app: tencent-meeting
+    task: tencent-meeting.adjust_datetime_dry_run
+  - app: tencent-meeting
+    task: tencent-meeting.view_meeting_info
