@@ -19,6 +19,7 @@ if os.fspath(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, os.fspath(SCRIPTS_ROOT))
 
 from utils import artifacts as artifact_utils
+from utils import tactile_trace
 
 DEFAULT_REPO = SKILL_ROOT / "scripts" / "MacosUseSDK"
 DEFAULT_WORKFLOW_DIR = SCRIPTS_ROOT / "workflows"
@@ -747,6 +748,7 @@ def cmd_artifact_dir(args: argparse.Namespace) -> int:
 
 def cmd_plan_log(args: argparse.Namespace) -> int:
     data = json.loads(args.path.read_text(encoding="utf-8"))
+    trace_summary = tactile_trace.trace_summary(data.get("trace"))
     steps = []
     for step in data.get("steps", []):
         execution = step.get("execution_results") or []
@@ -794,10 +796,16 @@ def cmd_plan_log(args: argparse.Namespace) -> int:
             "plan_output": data.get("plan_output") or os.fspath(args.path),
             "target": data.get("target"),
             "instruction": data.get("instruction"),
+            "trace_summary": trace_summary,
             "steps": steps,
         },
         args.output,
     )
+    return 0
+
+
+def cmd_trace_replay(args: argparse.Namespace) -> int:
+    write_or_print(tactile_trace.replay_trace_files(args.paths), args.output)
     return 0
 
 
@@ -1085,6 +1093,11 @@ def build_parser() -> argparse.ArgumentParser:
     plan_log.add_argument("path", type=Path)
     plan_log.add_argument("--output", type=Path)
     plan_log.set_defaults(func=cmd_plan_log)
+
+    trace_replay = subparsers.add_parser("trace-replay", help="Aggregate metrics from trace fixtures, run logs, or JSONL traces.")
+    trace_replay.add_argument("paths", nargs="+", type=Path)
+    trace_replay.add_argument("--output", type=Path)
+    trace_replay.set_defaults(func=cmd_trace_replay)
 
     return parser
 
