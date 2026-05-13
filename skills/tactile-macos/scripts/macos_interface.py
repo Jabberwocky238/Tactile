@@ -804,6 +804,11 @@ def cmd_plan_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_trace_replay(args: argparse.Namespace) -> int:
+    write_or_print(tactile_trace.replay_trace_files(args.paths), args.output)
+    return 0
+
+
 def cmd_profile_app(args: argparse.Namespace) -> int:
     module = load_app_exploration_module()
     profile = module.profile_target(args.target, guide_dir=args.guide_dir or module.APP_GUIDE_DIR)
@@ -1088,6 +1093,11 @@ def build_parser() -> argparse.ArgumentParser:
     plan_log.add_argument("path", type=Path)
     plan_log.add_argument("--output", type=Path)
     plan_log.set_defaults(func=cmd_plan_log)
+
+    trace_replay = subparsers.add_parser("trace-replay", help="Aggregate metrics from trace fixtures, run logs, or JSONL traces.")
+    trace_replay.add_argument("paths", nargs="+", type=Path)
+    trace_replay.add_argument("--output", type=Path)
+    trace_replay.set_defaults(func=cmd_trace_replay)
 
     return parser
 

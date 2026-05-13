@@ -113,6 +113,40 @@ class WindowsTactileTraceTests(unittest.TestCase):
 
         self.assertIsNone(old_payload["trace_summary"])
 
+    def test_fast_path_trace_and_replay_cli(self):
+        payload = {
+            "status": "success",
+            "hwnd": 123,
+            "chat": "张三",
+            "steps": [
+                {"step": "click_compose", "center": {"x": 10, "y": 20}, "result": {"ok": True, "mode": "coordinate"}},
+                {"step": "verify_title_ocr", "verification": {"matched": True, "ocr_lines": ["张三"]}},
+            ],
+            "title_verification": {"matched": True},
+        }
+
+        trace = tactile_trace.build_fast_path_trace(payload, platform="windows", command="wechat-send-message")
+
+        self.assertEqual(trace["task"]["source"], "fast_path")
+        self.assertEqual(trace["target"]["chat_length"], 2)
+        self.assertTrue(trace["outcome"]["verified"])
+        self.assertGreaterEqual(trace["metrics"]["coordinate_action_count"], 1)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_path = Path(temp_dir) / "run.json"
+            log_path.write_text(json.dumps({"trace": trace}, ensure_ascii=False), encoding="utf-8")
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                windows_interface.cmd_trace_replay(type("Args", (), {"paths": [log_path], "output": None})())
+            payload = json.loads(stdout.getvalue())
+
+        self.assertEqual(payload["trace_count"], 1)
+        self.assertEqual(payload["by_platform"]["windows"]["trace_count"], 1)
+        self.assertGreater(payload["verification_coverage"], 0)
+        self.assertGreater(payload["coordinate_action_rate"], 0)
+        self.assertEqual(payload["coordinate_sources"]["coordinate"], 1)
+        self.assertEqual(payload["coordinate_source_known_rate"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

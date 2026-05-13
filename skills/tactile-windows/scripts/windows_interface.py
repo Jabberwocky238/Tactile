@@ -140,6 +140,26 @@ def write_or_print(data: Any, output: Path | None) -> None:
         print(text, end="")
 
 
+def attach_fast_trace(
+    payload: dict[str, Any],
+    *,
+    command: str,
+    instruction: str | None = None,
+) -> dict[str, Any]:
+    if not isinstance(payload, dict) or "trace" in payload:
+        return payload
+    try:
+        payload["trace"] = tactile_trace.build_fast_path_trace(
+            payload,
+            platform="windows",
+            command=command,
+            instruction=instruction or command,
+        )
+    except Exception as exc:
+        payload["trace_error"] = str(exc)
+    return payload
+
+
 def arg_list_has_option(values: list[str], option: str) -> bool:
     return any(value == option or value.startswith(f"{option}=") for value in values)
 
@@ -1071,28 +1091,24 @@ def cmd_feishu_switch_org(args: argparse.Namespace) -> int:
     )
 
     if args.dry_run:
-        write_or_print(
-            {
-                "status": "dry_run",
-                "target_name": wanted,
-                "hwnd": hwnd,
-                "steps": steps,
-            },
-            args.output,
-        )
+        payload = {
+            "status": "dry_run",
+            "target_name": wanted,
+            "hwnd": hwnd,
+            "steps": steps,
+        }
+        write_or_print(attach_fast_trace(payload, command="feishu-switch-org"), args.output)
         return 0
 
     if not centers:
-        write_or_print(
-            {
-                "status": "not_found",
-                "reason": "could not detect Feishu bottom organization dock",
-                "target_name": wanted,
-                "hwnd": hwnd,
-                "steps": steps,
-            },
-            args.output,
-        )
+        payload = {
+            "status": "not_found",
+            "reason": "could not detect Feishu bottom organization dock",
+            "target_name": wanted,
+            "hwnd": hwnd,
+            "steps": steps,
+        }
+        write_or_print(attach_fast_trace(payload, command="feishu-switch-org"), args.output)
         return 1
 
     wx = float(region.get("x") or 0)
@@ -1136,29 +1152,25 @@ def cmd_feishu_switch_org(args: argparse.Namespace) -> int:
         keypress(repo, hwnd, "escape")
         time.sleep(0.2)
         if matched:
-            write_or_print(
-                {
-                    "status": "success",
-                    "target_name": wanted,
-                    "hwnd": hwnd,
-                    "selected_candidate_index": index,
-                    "verification": "matched target text in profile card after clicking bottom organization dock icon",
-                    "steps": steps,
-                },
-                args.output,
-            )
+            payload = {
+                "status": "success",
+                "target_name": wanted,
+                "hwnd": hwnd,
+                "selected_candidate_index": index,
+                "verification": "matched target text in profile card after clicking bottom organization dock icon",
+                "steps": steps,
+            }
+            write_or_print(attach_fast_trace(payload, command="feishu-switch-org"), args.output)
             return 0
 
-    write_or_print(
-        {
-            "status": "not_found",
-            "target_name": wanted,
-            "hwnd": hwnd,
-            "reason": "no visible bottom dock candidate produced a profile card containing the requested organization text",
-            "steps": steps,
-        },
-        args.output,
-    )
+    payload = {
+        "status": "not_found",
+        "target_name": wanted,
+        "hwnd": hwnd,
+        "reason": "no visible bottom dock candidate produced a profile card containing the requested organization text",
+        "steps": steps,
+    }
+    write_or_print(attach_fast_trace(payload, command="feishu-switch-org"), args.output)
     return 1
 
 
@@ -1368,6 +1380,7 @@ def cmd_feishu_open_chat(args: argparse.Namespace) -> int:
         allow_first_result=args.allow_first_result,
         dry_run=args.dry_run,
     )
+    payload = attach_fast_trace(payload, command="feishu-open-chat")
     write_or_print(payload, args.output)
     return code
 
@@ -1531,6 +1544,7 @@ def cmd_feishu_send_message(args: argparse.Namespace) -> int:
         send=not args.draft_only,
         dry_run=args.dry_run,
     )
+    payload = attach_fast_trace(payload, command="feishu-send-message")
     write_or_print(payload, args.output)
     return code
 
@@ -1713,6 +1727,7 @@ def cmd_wechat_send_message(args: argparse.Namespace) -> int:
         restore_clipboard=not args.no_restore_clipboard,
         clear_existing_draft=not args.keep_existing_draft,
     )
+    payload = attach_fast_trace(payload, command="wechat-send-message")
     write_or_print(payload, args.output)
     return code
 
@@ -2771,6 +2786,7 @@ def cmd_feishu_fill_daily_report(args: argparse.Namespace) -> int:
         wait_ms=args.wait_ms,
         dry_run=args.dry_run,
     )
+    payload = attach_fast_trace(payload, command="feishu-fill-daily-report")
     write_or_print(payload, args.output)
     return code
 
@@ -2975,6 +2991,11 @@ def cmd_plan_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_trace_replay(args: argparse.Namespace) -> int:
+    write_or_print(tactile_trace.replay_trace_files(args.paths), args.output)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -3079,6 +3100,11 @@ def build_parser() -> argparse.ArgumentParser:
     add_global(plan_log)
     plan_log.add_argument("path", type=Path)
     plan_log.set_defaults(func=cmd_plan_log)
+
+    trace_replay = subparsers.add_parser("trace-replay", help="Aggregate metrics from trace fixtures, run logs, or JSONL traces.")
+    add_global(trace_replay)
+    trace_replay.add_argument("paths", nargs="+", type=Path)
+    trace_replay.set_defaults(func=cmd_trace_replay)
 
     wechat_send_message = subparsers.add_parser(
         "wechat-send-message",

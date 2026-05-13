@@ -148,6 +148,47 @@ class MacosTactileTraceTests(unittest.TestCase):
 
         self.assertIsNone(old_payload["trace_summary"])
 
+    def test_fast_path_trace_sanitizes_text_and_replay_summarizes_fixtures(self):
+        payload = {
+            "status": "success",
+            "pid": 31334,
+            "chat": "张三",
+            "steps": [
+                {"step": "input_search_text", "text": "张三", "method": "pastetext", "result": {"ok": True, "mode": "paste"}},
+                {"step": "click_result", "center": {"x": 10, "y": 20}, "result": {"ok": True, "mode": "coordinate"}},
+                {"step": "verify_chat", "verification": {"confirmed": True, "header_match": True}},
+            ],
+            "verification": {"confirmed": True},
+        }
+
+        trace = tactile_trace.build_fast_path_trace(payload, platform="macos", command="feishu-send-message")
+
+        self.assertEqual(trace["task"]["source"], "fast_path")
+        self.assertEqual(trace["target"]["chat_length"], 2)
+        self.assertTrue(trace["outcome"]["verified"])
+        self.assertNotIn("张三", json.dumps(trace, ensure_ascii=False))
+        self.assertGreaterEqual(trace["metrics"]["passed_verification_count"], 1)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_path = Path(temp_dir) / "run.json"
+            log_path.write_text(json.dumps({"trace": trace}, ensure_ascii=False), encoding="utf-8")
+            jsonl_path = Path(temp_dir) / "runs.jsonl"
+            jsonl_path.write_text(json.dumps({"trace": trace}, ensure_ascii=False) + "\n", encoding="utf-8")
+
+            replay = tactile_trace.replay_trace_files([log_path, jsonl_path])
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                macos_interface.cmd_trace_replay(type("Args", (), {"paths": [log_path], "output": None})())
+            cli_payload = json.loads(stdout.getvalue())
+
+        self.assertEqual(replay["trace_count"], 2)
+        self.assertEqual(replay["by_source"]["fast_path"]["trace_count"], 2)
+        self.assertGreater(replay["verification_coverage"], 0)
+        self.assertGreater(replay["coordinate_action_rate"], 0)
+        self.assertEqual(replay["coordinate_sources"]["coordinate"], 2)
+        self.assertEqual(replay["coordinate_source_known_rate"], 1.0)
+        self.assertEqual(cli_payload["trace_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
